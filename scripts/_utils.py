@@ -283,7 +283,7 @@ def get_gene_info(attributes: str) -> tuple[str, str, str, str]:
 
     Returns
     -------
-    Tuple[str, str, str, str]
+    tuple[str, str, str, str]
         A tuple containing gene_id, gene_name, gene_type, and protein_id.
     """
     # Parse the attributes field in the GTF file to get the gene_id and gene_name
@@ -360,14 +360,14 @@ def closest_larger_number(
 
 
 def filter_exon_pos(
-    exon_pos: Dict[str, List[Tuple[int, int]]], loc: int, mut_info: dict, strand: str
+    exon_pos: dict[str, list[tuple[int, int]]], loc: int, mut_info: dict, strand: str
 ) -> dict:
     """
     Filters exon positions based on location, mutation information, and strand orientation.
 
     Parameters
     ----------
-    exon_pos : Dict[str, List[Tuple[int, int]]]
+    exon_pos : dict[str, list[tuple[int, int]]]
         Dictionary containing exon position information organized by protein ID.
         Keys represent protein IDs, and values are lists of exon position tuples.
 
@@ -603,7 +603,7 @@ def get_left_hang(
     return overlap
 
 
-def flanking_lower_positions(string: str) -> tuple(int, int):
+def flanking_lower_positions(string: str) -> tuple[int, int]:
     """
     Finds the number of lowercase characters to the left and right of the first and last uppercase characters, respectively.
 
@@ -680,7 +680,7 @@ def check_missing_codon(codon: str) -> bool:
 
 def perform_codon_check(
     var_class: str, codon_ref: str, codon_var: str
-) -> tuple(list[int], str, str):
+) -> tuple[list[int], str, str]:
     """
     Performs codon check based on variant class and returns left frames and modified codons.
 
