@@ -157,3 +157,6 @@ cython_debug/
 /data
 */final_minigenes_control.csv
 */final_minigenes_variant.csv
+scripts/Archive.zip
+scripts/final_minigenes_control_v2.csv
+scripts/final_minigenes_variant_v2.csv
