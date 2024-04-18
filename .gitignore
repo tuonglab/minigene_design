@@ -155,3 +155,5 @@ cython_debug/
 *.fa
 *.fai
 /data
+*/final_minigenes_control.csv
+*/final_minigenes_variant.csv
