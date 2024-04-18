@@ -5,6 +5,7 @@ import pandas as pd
 
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
 FINAL_SEQ_LEN = 93
 
@@ -13,19 +14,21 @@ def read_and_filter(
     file_input_path: str | Path, keep_from_lines: int = 103
 ) -> pd.DataFrame:
     """
-    _summary_
+    Reads input data from a file and processes it to return a filtered DataFrame.
 
     Parameters
     ----------
     file_input_path : str | Path
+        Path to the input file.
 
     keep_from_lines : int, optional
-        _description_, by default 103
+        The number of lines to keep from the input file, starting from the specified line number.
+        Defaults to 103.
 
     Returns
     -------
     pd.DataFrame
-        _description_
+        Processed DataFrame containing filtered data.
     """
     file_input_path = (
         Path(file_input_path)
@@ -93,7 +96,20 @@ def read_and_filter(
     return df
 
 
-def complementary_sequence(dna_sequence):
+def complementary_sequence(dna_sequence: str) -> str:
+    """
+    Generates the complementary DNA sequence for the given DNA sequence.
+
+    Parameters
+    ----------
+    dna_sequence : str
+        Input DNA sequence.
+
+    Returns
+    -------
+    str
+        Complementary DNA sequence.
+    """
     complement_dict = {"A": "T", "T": "A", "C": "G", "G": "C"}
     complementary_seq = "".join(
         complement_dict.get(base, base) for base in dna_sequence
@@ -101,7 +117,20 @@ def complementary_sequence(dna_sequence):
     return complementary_seq
 
 
-def create_result_list(df: pd.DataFrame) -> list:
+def create_result_list(df: pd.DataFrame) -> dict:
+    """
+    Creates a dictionary containing lists of data extracted from the input DataFrame.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input DataFrame containing data.
+
+    Returns
+    -------
+    dict
+        Dictionary containing lists of extracted data.
+    """
     chrom_list = list(df["chromosome"])
     ref_list = list(df["reference"])
     var_list = list(df["variant"])
@@ -137,6 +166,23 @@ def create_result_list(df: pd.DataFrame) -> list:
 
 
 def extract_result(df_dict: dict, index: int) -> dict:
+    """
+    Extracts data for a specific index from a dictionary containing lists of data.
+
+    Parameters
+    ----------
+    df_dict : dict
+        Dictionary containing lists of data.
+        Keys represent different data columns, and values are lists of corresponding data.
+
+    index : int
+        Index of the data to extract.
+
+    Returns
+    -------
+    dict
+        Dictionary containing data extracted for the specified index.
+    """
     return {
         "reference": df_dict["reference"][index],
         "variant": df_dict["variant"][index],
@@ -156,7 +202,22 @@ def extract_result(df_dict: dict, index: int) -> dict:
     }
 
 
-def extract_exon_info(gtf_file):
+def extract_exon_info(gtf_file: str | Path) -> dict:
+    """
+    Extracts exon positions from a GTF file and organizes them by gene and protein ID.
+
+    Parameters
+    ----------
+    gtf_file : str | Path
+        Path to the GTF file containing exon information.
+
+    Returns
+    -------
+    dict
+        Dictionary containing exon positions organized by gene ID and protein ID.
+        Keys represent gene IDs, and values are dictionaries where keys are protein IDs
+        and values are lists of exon positions.
+    """
     # Parse the GTF file to get exon positions
     gene_info = get_exon_info(gtf_file)
     # Extract exon sequences
@@ -170,7 +231,22 @@ def extract_exon_info(gtf_file):
     return exon_positions
 
 
-def get_exon_info(gtf_file):
+def get_exon_info(gtf_file: str | Path):
+    """
+    Parses a GTF file to extract exon positions and related gene information.
+
+    Parameters
+    ----------
+    gtf_file : str | Path
+        Path to the GTF file.
+
+    Returns
+    -------
+    dict
+        Dictionary containing gene information and exon positions.
+        Keys represent gene IDs, and values are tuples containing gene name, chromosome,
+        and a dictionary of exon positions organized by protein ID.
+    """
     exon_positions = {}
     gene_info = {}
     # Read the GTF file and extract exon positions
@@ -196,7 +272,20 @@ def get_exon_info(gtf_file):
     return gene_info
 
 
-def get_gene_info(attributes):
+def get_gene_info(attributes: str) -> tuple[str, str, str, str]:
+    """
+    Parses the attributes field in the GTF file to extract gene information.
+
+    Parameters
+    ----------
+    attributes : str
+        String containing attributes from the GTF file.
+
+    Returns
+    -------
+    Tuple[str, str, str, str]
+        A tuple containing gene_id, gene_name, gene_type, and protein_id.
+    """
     # Parse the attributes field in the GTF file to get the gene_id and gene_name
     attributes = attributes.split(";")
     gene_id, gene_name, gene_type, protein_id = None, None, None, None
@@ -214,7 +303,26 @@ def get_gene_info(attributes):
     return gene_id, gene_name, gene_type, protein_id
 
 
-def closest_smaller_number(exon_pos, loc):
+def closest_smaller_number(
+    exon_pos: list[tuple[int, int]], loc: int
+) -> tuple[int, int] | None:
+    """
+    Finds the closest smaller exon position tuple to the given location.
+
+    Parameters
+    ----------
+    exon_pos : list[tuple[int, int]]
+        List of exon position tuples, where each tuple represents the start and end positions of an exon.
+
+    loc : int
+        Location to find the closest smaller exon position for.
+
+    Returns
+    -------
+    tuple[int, int] | None
+        The closest smaller exon position tuple to the given location.
+        Returns None if no such exon position is found.
+    """
     closest_tuple = None
     for exon in exon_pos:
         if loc > exon[0] and loc < exon[1]:
@@ -223,7 +331,26 @@ def closest_smaller_number(exon_pos, loc):
     return closest_tuple
 
 
-def closest_larger_number(exon_pos, loc):
+def closest_larger_number(
+    exon_pos: list[tuple[int, int]], loc: int
+) -> tuple[int, int] | None:
+    """
+    Finds the closest larger exon position tuple to the given location.
+
+    Parameters
+    ----------
+    exon_pos : list[tuple[int, int]]
+        List of exon position tuples, where each tuple represents the start and end positions of an exon.
+
+    loc : int
+        Location to find the closest larger exon position for.
+
+    Returns
+    -------
+    tuple[int, int] | None
+        The closest larger exon position tuple to the given location.
+        Returns None if no such exon position is found.
+    """
     closest_tuple = None
     for exon in exon_pos:
         if exon[0] < loc and not exon[1] < loc:
@@ -232,7 +359,34 @@ def closest_larger_number(exon_pos, loc):
     return closest_tuple
 
 
-def filter_exon_pos(exon_pos, loc, mut_info, strand):
+def filter_exon_pos(
+    exon_pos: Dict[str, List[Tuple[int, int]]], loc: int, mut_info: dict, strand: str
+) -> dict:
+    """
+    Filters exon positions based on location, mutation information, and strand orientation.
+
+    Parameters
+    ----------
+    exon_pos : Dict[str, List[Tuple[int, int]]]
+        Dictionary containing exon position information organized by protein ID.
+        Keys represent protein IDs, and values are lists of exon position tuples.
+
+    loc : int
+        Location to filter exon positions around.
+
+    mut_info : dict
+        Dictionary containing mutation information.
+        It should contain at least a 'protein_id' key.
+
+    strand : str
+        Strand orientation of the gene ('1' for forward strand, '-1' for reverse strand).
+
+    Returns
+    -------
+    dict
+        Filtered exon positions organized by protein ID.
+        Only exon positions after the closest exon position to the given location are included.
+    """
     result = {}
     for prot_id in exon_pos:
         if prot_id.split(".")[0] == mut_info["protein_id"]:
@@ -245,11 +399,48 @@ def filter_exon_pos(exon_pos, loc, mut_info, strand):
     return result
 
 
-def find(lst, search):
+def find(lst: list, search: Any) -> list[int]:
+    """
+    Finds the indices of all occurrences of a given element in a list.
+
+    Parameters
+    ----------
+    lst : list
+        List in which to search for the element.
+
+    search : Any
+        Element to search for in the list.
+
+    Returns
+    -------
+    list[int]
+        List of indices where the element is found in the input list.
+    """
     return [i for i, x in enumerate(lst) if x == search]
 
 
-def generate_windows(sequence, window_size=93, overlap=45):
+def generate_windows(
+    sequence: str, window_size: int = 93, overlap: int = 45
+) -> list[str]:
+    """
+    Generates overlapping windows from a sequence.
+
+    Parameters
+    ----------
+    sequence : str
+        Input sequence.
+
+    window_size : int, optional
+        Size of each window, by default 93.
+
+    overlap : int, optional
+        Number of characters to overlap between consecutive windows, by default 45.
+
+    Returns
+    -------
+    list[str]
+        List of generated windows from the sequence.
+    """
     windows = []
     start = 0
     end = window_size
@@ -273,7 +464,26 @@ def generate_windows(sequence, window_size=93, overlap=45):
     return windows
 
 
-def print_windows(sequence, windows, window_size=93, overlap=45):
+def print_windows(
+    sequence: str, windows: list[str], window_size: int = 93, overlap: int = 45
+):
+    """
+    Prints overlapping windows generated from a sequence with appropriate spacing.
+
+    Parameters
+    ----------
+    sequence : str
+        Input sequence.
+
+    windows : list[str]
+        List of generated windows from the sequence.
+
+    window_size : int, optional
+        Size of each window, by default 93.
+
+    overlap : int, optional
+        Number of characters to overlap between consecutive windows, by default 45.
+    """
     for i, window in enumerate(windows[:-1]):
         left_space = " " * (i * (window_size - overlap))
         right_space = " " * (window_size - overlap - len(window))
@@ -285,13 +495,42 @@ def print_windows(sequence, windows, window_size=93, overlap=45):
 
 
 def get_right_hang(
-    first_seq,
-    chrom,
-    prot_id,
-    first_seq_end_loc,
-    filtered_exon_pos,
-    fasta,
-):
+    first_seq: str,
+    chrom: str,
+    prot_id: str,
+    first_seq_end_loc: int,
+    filtered_exon_pos: dict[str, list[tuple[int, int]]],
+    fasta: "Fasta",
+) -> list[str]:
+    """
+    Retrieves the right hanging sequence and generates overlapping windows.
+
+    Parameters
+    ----------
+    first_seq : str
+        First sequence obtained from the transcript.
+
+    chrom : str
+        Chromosome identifier.
+
+    prot_id : str
+        Protein identifier.
+
+    first_seq_end_loc : int
+        End location of the first sequence.
+
+    filtered_exon_pos : dict[str, list[tuple[int, int]]]
+        Filtered exon positions organized by protein ID.
+        Keys represent protein IDs, and values are lists of exon position tuples.
+
+    fasta : Fasta
+        Fasta object used to retrieve sequences.
+
+    Returns
+    -------
+    list[str]
+        List of overlapping windows generated from the right hanging sequence.
+    """
     right_hang = first_seq[-45:]
     right_hang_pad = fasta.get_seq(
         chrom, first_seq_end_loc + 1, filtered_exon_pos[prot_id][0][1]
@@ -310,13 +549,42 @@ def get_right_hang(
 
 
 def get_left_hang(
-    first_seq,
-    chrom,
-    prot_id,
-    first_seq_start_loc,
-    filtered_exon_pos,
-    fasta,
-):
+    first_seq: str,
+    chrom: str,
+    prot_id: str,
+    first_seq_start_loc: int,
+    filtered_exon_pos: dict[str, list[tuple[int, int]]],
+    fasta: "Fasta",
+) -> list[str]:
+    """
+    Retrieves the left hanging sequence and generates overlapping windows.
+
+    Parameters
+    ----------
+    first_seq : str
+        First sequence obtained from the transcript.
+
+    chrom : str
+        Chromosome identifier.
+
+    prot_id : str
+        Protein identifier.
+
+    first_seq_start_loc : int
+        start location of the first sequence.
+
+    filtered_exon_pos : dict[str, list[tuple[int, int]]]
+        Filtered exon positions organized by protein ID.
+        Keys represent protein IDs, and values are lists of exon position tuples.
+
+    fasta : Fasta
+        Fasta object used to retrieve sequences.
+
+    Returns
+    -------
+    list[str]
+        List of overlapping windows generated from the right hanging sequence.
+    """
     left_hang = first_seq[:45]  # Get the first 45 characters from the start
     left_hang_pad = fasta.get_seq(
         chrom, filtered_exon_pos[prot_id][0][0], first_seq_start_loc - 1
