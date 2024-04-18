@@ -603,7 +603,20 @@ def get_left_hang(
     return overlap
 
 
-def flanking_lower_positions(string):
+def flanking_lower_positions(string: str) -> tuple(int, int):
+    """
+    Finds the number of lowercase characters to the left and right of the first and last uppercase characters, respectively.
+
+    Parameters
+    ----------
+    string : str
+        Input string.
+
+    Returns
+    -------
+    tuple[int, int]
+        Number of lowercase characters to the left and right of the first and last uppercase characters, respectively.
+    """
     first_upper_index = None
     last_upper_index = None
 
@@ -627,7 +640,20 @@ def flanking_lower_positions(string):
     return left_count, right_count
 
 
-def reverse_complement(dna_sequence):
+def reverse_complement(dna_sequence: str) -> str:
+    """
+    Generates the reverse complement of a DNA sequence.
+
+    Parameters
+    ----------
+    dna_sequence : str
+        Input DNA sequence.
+
+    Returns
+    -------
+    str
+        Reverse complement of the input DNA sequence.
+    """
     complement_dict = {"A": "T", "T": "A", "C": "G", "G": "C"}
     reverse_comp_seq = "".join(
         complement_dict.get(base, base) for base in reversed(dna_sequence)
@@ -636,12 +662,44 @@ def reverse_complement(dna_sequence):
 
 
 def check_missing_codon(codon: str) -> bool:
+    """
+    Checks if a codon is missing.
+
+    Parameters
+    ----------
+    codon : str
+        Codon sequence.
+
+    Returns
+    -------
+    bool
+        True if the codon is not missing (i.e., not equal to '-'), False otherwise.
+    """
     return codon != "-"
 
 
 def perform_codon_check(
     var_class: str, codon_ref: str, codon_var: str
-) -> (list[int], str, str):
+) -> tuple(list[int], str, str):
+    """
+    Performs codon check based on variant class and returns left frames and modified codons.
+
+    Parameters
+    ----------
+    var_class : str
+        Variant class ('insertion' or 'deletion').
+
+    codon_ref : str
+        Reference codon sequence.
+
+    codon_var : str
+        Variant codon sequence.
+
+    Returns
+    -------
+    tuple[list[int], str, str]
+        Tuple containing left frames, modified reference codon, and modified variant codon.
+    """
     if var_class == "insertion":
         codon_check = codon_ref
     elif var_class == "deletion":
@@ -659,18 +717,64 @@ def perform_codon_check(
 
 
 def stop_check(aa: str) -> bool:
+    """
+    Checks if the amino acid sequence contains a stop codon.
+
+    Parameters
+    ----------
+    aa : str
+        Amino acid sequence.
+
+    Returns
+    -------
+    bool
+        True if a stop codon is found, False otherwise.
+    """
     return re.search("\\*", aa)
 
 
 def frames_or_not(check: bool) -> list[int]:
+    """
+    Determines the list of frames based on a boolean check.
+
+    Parameters
+    ----------
+    check : bool
+        Boolean flag indicating whether to include all frames or only one.
+
+    Returns
+    -------
+    list[int]
+        List of frames.
+    """
     return [44, 45, 46] if check else [44]
 
 
 def get_sequences_indel(
-    mut_info,
-    exon_info,
-    fasta,
-):
+    mut_info: dict,
+    exon_info: dict,
+    fasta: "Fasta",
+) -> tuple[dict[str, dict[int, list[str]]], dict[str, dict[int, list[str]]], None]:
+    """
+    Retrieves reference and variant sequences for indels.
+
+    Parameters
+    ----------
+    mut_info : dict
+        Mutation information dictionary.
+
+    exon_info : dict
+        Exon information dictionary.
+
+    fasta : Fasta
+        Fasta file object containing sequences.
+
+    Returns
+    -------
+    tuple[dict[str, dict[int, list[str]]], dict[str, dict[int, list[str]]], None]
+        Tuple containing reference sequence dictionary and variant sequence dictionary.
+        Returns (None, None) if gene not found in exon_info.
+    """
     (
         codon_ref,
         codon_var,
@@ -910,10 +1014,30 @@ def get_sequences_indel(
 
 
 def get_sequences_substitution(
-    mut_info,
-    exon_info,
-    fasta,
-):
+    mut_info: dict,
+    exon_info: dict,
+    fasta: "Fasta",
+) -> tuple[dict[str, dict[int, list[str]]], dict[str, dict[int, list[str]]], None]:
+    """
+    Retrieves reference and variant sequences for substitutions.
+
+    Parameters
+    ----------
+    mut_info : dict
+        Mutation information dictionary.
+
+    exon_info : dict
+        Exon information dictionary.
+
+    fasta : Fasta
+        Fasta file object containing sequences.
+
+    Returns
+    -------
+    tuple[dict[str, dict[int, list[str]]], dict[str, dict[int, list[str]]], None]
+        Tuple containing reference sequence dictionary and variant sequence dictionary.
+        Returns (None, None) if gene not found in exon_info.
+    """
     (
         codon_ref,
         codon_var,
