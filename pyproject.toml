@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "minigene-design"
+version = "0.1.0"
+description = ""
+authors = ["Zewen Kelvin Tuong <z.tuong@uq.edu.au>"]
+readme = "README.md"
+packages = [{ include = "minigene_design" }]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyfaidx = "^0.8.1.1"
+pandas = "^2.2.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Configuration for the interrogate tool which checks docstring coverage
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-semiprivate = false
+ignore-private = false
+ignore-property-decorators = false
+ignore-module = true
+fail-under = 100.0
+ignore-regex = ["^get$", "^mock_.*", ".*BaseClass.*"]
+verbose = 1
+quiet = false
+whitelist-regex = []
+color = true
+exclude = ["scripts/archive", "resources"]
+
+[tool.black]
+line-length = 140
+include = '\.pyi?$'
