@@ -10,9 +10,7 @@ from typing import Any
 FINAL_SEQ_LEN = 93
 
 
-def read_and_filter(
-    file_input_path: str | Path, keep_from_lines: int = 103
-) -> pd.DataFrame:
+def read_and_filter(file_input_path: str | Path, keep_from_lines: int = 103) -> pd.DataFrame:
     """
     Reads input data from a file and processes it to return a filtered DataFrame.
 
@@ -30,18 +28,13 @@ def read_and_filter(
     pd.DataFrame
         Processed DataFrame containing filtered data.
     """
-    file_input_path = (
-        Path(file_input_path)
-        if not isinstance(file_input_path, Path)
-        else file_input_path
-    )
+    file_input_path = Path(file_input_path) if not isinstance(file_input_path, Path) else file_input_path
     try:
         df = pd.read_csv(file_input_path, sep="\t")
     except:  # from Alicia's clean_up_files.py
         shutil.copy(
             file_input_path,
-            file_input_path.parent
-            / (file_input_path.stem + "_old" + file_input_path.suffix),
+            file_input_path.parent / (file_input_path.stem + "_old" + file_input_path.suffix),
         )
         with open(file_input_path, "r") as file:
             lines = file.readlines()
@@ -66,29 +59,11 @@ def read_and_filter(
     df["reference"] = [r.split("_")[2].split("/")[0] for r in df["#Uploaded_variation"]]
     df["variant"] = [r.split("_")[2].split("/")[1] for r in df["#Uploaded_variation"]]
     df["aa_ref"] = [r.split("/")[0] for r in df["Amino_acids"]]
-    df["aa_var"] = [
-        r.split("/")[1] if re.search("/", r) else r for r in df["Amino_acids"]
-    ]
+    df["aa_var"] = [r.split("/")[1] if re.search("/", r) else r for r in df["Amino_acids"]]
     df["codon_ref"] = [r.split("/")[0] for r in df["Codons"]]
-    df["codon_var"] = [
-        r.split("/")[1] if re.search("/", r) else r for r in df["Codons"]
-    ]
-    df["mutation_location"] = [
-        (
-            int(r.split(":")[1].split("-")[0])
-            if re.search("-", r)
-            else int(r.split(":")[1])
-        )
-        for r in df["Location"]
-    ]
-    df["mutation_location2"] = [
-        (
-            int(r.split(":")[1].split("-")[1])
-            if re.search("-", r)
-            else int(r.split(":")[1])
-        )
-        for r in df["Location"]
-    ]
+    df["codon_var"] = [r.split("/")[1] if re.search("/", r) else r for r in df["Codons"]]
+    df["mutation_location"] = [(int(r.split(":")[1].split("-")[0]) if re.search("-", r) else int(r.split(":")[1])) for r in df["Location"]]
+    df["mutation_location2"] = [(int(r.split(":")[1].split("-")[1]) if re.search("-", r) else int(r.split(":")[1])) for r in df["Location"]]
     for i, r in df.iterrows():
         if r["aa_ref"] == r["aa_var"]:
             df.at[i, "Keep"] = False
@@ -111,9 +86,7 @@ def complementary_sequence(dna_sequence: str) -> str:
         Complementary DNA sequence.
     """
     complement_dict = {"A": "T", "T": "A", "C": "G", "G": "C"}
-    complementary_seq = "".join(
-        complement_dict.get(base, base) for base in dna_sequence
-    )
+    complementary_seq = "".join(complement_dict.get(base, base) for base in dna_sequence)
     return complementary_seq
 
 
@@ -303,9 +276,7 @@ def get_gene_info(attributes: str) -> tuple[str, str, str, str]:
     return gene_id, gene_name, gene_type, protein_id
 
 
-def closest_smaller_number(
-    exon_pos: list[tuple[int, int]], loc: int
-) -> tuple[int, int] | None:
+def closest_smaller_number(exon_pos: list[tuple[int, int]], loc: int) -> tuple[int, int] | None:
     """
     Finds the closest smaller exon position tuple to the given location.
 
@@ -331,9 +302,7 @@ def closest_smaller_number(
     return closest_tuple
 
 
-def closest_larger_number(
-    exon_pos: list[tuple[int, int]], loc: int
-) -> tuple[int, int] | None:
+def closest_larger_number(exon_pos: list[tuple[int, int]], loc: int) -> tuple[int, int] | None:
     """
     Finds the closest larger exon position tuple to the given location.
 
@@ -359,9 +328,7 @@ def closest_larger_number(
     return closest_tuple
 
 
-def filter_exon_pos(
-    exon_pos: dict[str, list[tuple[int, int]]], loc: int, mut_info: dict, strand: str
-) -> dict:
+def filter_exon_pos(exon_pos: dict[str, list[tuple[int, int]]], loc: int, mut_info: dict, strand: str) -> dict:
     """
     Filters exon positions based on location, mutation information, and strand orientation.
 
@@ -419,9 +386,7 @@ def find(lst: list, search: Any) -> list[int]:
     return [i for i, x in enumerate(lst) if x == search]
 
 
-def generate_windows(
-    sequence: str, window_size: int = 93, overlap: int = 45
-) -> list[str]:
+def generate_windows(sequence: str, window_size: int = 93, overlap: int = 45) -> list[str]:
     """
     Generates overlapping windows from a sequence.
 
@@ -464,9 +429,7 @@ def generate_windows(
     return windows
 
 
-def print_windows(
-    sequence: str, windows: list[str], window_size: int = 93, overlap: int = 45
-):
+def print_windows(sequence: str, windows: list[str], window_size: int = 93, overlap: int = 45):
     """
     Prints overlapping windows generated from a sequence with appropriate spacing.
 
@@ -532,9 +495,7 @@ def get_right_hang(
         List of overlapping windows generated from the right hanging sequence.
     """
     right_hang = first_seq[-45:]
-    right_hang_pad = fasta.get_seq(
-        chrom, first_seq_end_loc + 1, filtered_exon_pos[prot_id][0][1]
-    )
+    right_hang_pad = fasta.get_seq(chrom, first_seq_end_loc + 1, filtered_exon_pos[prot_id][0][1])
     right_hang += str(right_hang_pad)
     for n in range(1, len(filtered_exon_pos[prot_id])):
         add_hang = fasta.get_seq(
@@ -586,9 +547,7 @@ def get_left_hang(
         List of overlapping windows generated from the right hanging sequence.
     """
     left_hang = first_seq[:45]  # Get the first 45 characters from the start
-    left_hang_pad = fasta.get_seq(
-        chrom, filtered_exon_pos[prot_id][0][0], first_seq_start_loc - 1
-    )
+    left_hang_pad = fasta.get_seq(chrom, filtered_exon_pos[prot_id][0][0], first_seq_start_loc - 1)
     left_hang = str(left_hang_pad) + left_hang
     for n in range(1, len(filtered_exon_pos[prot_id])):
         add_hang = fasta.get_seq(
@@ -626,16 +585,8 @@ def flanking_lower_positions(string: str) -> tuple[int, int]:
                 first_upper_index = i
             last_upper_index = i
 
-    left_count = (
-        sum(1 for i in range(first_upper_index) if string[i].islower())
-        if first_upper_index is not None
-        else 0
-    )
-    right_count = (
-        sum(1 for i in range(last_upper_index + 1, len(string)) if string[i].islower())
-        if last_upper_index is not None
-        else 0
-    )
+    left_count = sum(1 for i in range(first_upper_index) if string[i].islower()) if first_upper_index is not None else 0
+    right_count = sum(1 for i in range(last_upper_index + 1, len(string)) if string[i].islower()) if last_upper_index is not None else 0
 
     return left_count, right_count
 
@@ -655,9 +606,7 @@ def reverse_complement(dna_sequence: str) -> str:
         Reverse complement of the input DNA sequence.
     """
     complement_dict = {"A": "T", "T": "A", "C": "G", "G": "C"}
-    reverse_comp_seq = "".join(
-        complement_dict.get(base, base) for base in reversed(dna_sequence)
-    )
+    reverse_comp_seq = "".join(complement_dict.get(base, base) for base in reversed(dna_sequence))
     return reverse_comp_seq
 
 
@@ -678,9 +627,7 @@ def check_missing_codon(codon: str) -> bool:
     return codon != "-"
 
 
-def perform_codon_check(
-    var_class: str, codon_ref: str, codon_var: str
-) -> tuple[list[int], str, str]:
+def perform_codon_check(var_class: str, codon_ref: str, codon_var: str) -> tuple[list[int], str, str]:
     """
     Performs codon check based on variant class and returns left frames and modified codons.
 
@@ -796,13 +743,9 @@ def get_sequences_indel(
         return None, None
     filtered_exon_pos = filter_exon_pos(exon_info[gene], mut, mut_info, strand)
     ref_seq_dict, var_seq_dict = {}, {}
-    left_frames, codon_ref, codon_var = perform_codon_check(
-        var_class, codon_ref, codon_var
-    )
+    left_frames, codon_ref, codon_var = perform_codon_check(var_class, codon_ref, codon_var)
     for prot_id in filtered_exon_pos:
-        ref_seq_dict[prot_id], var_seq_dict[prot_id] = defaultdict(list), defaultdict(
-            list
-        )
+        ref_seq_dict[prot_id], var_seq_dict[prot_id] = defaultdict(list), defaultdict(list)
         for i, frame in enumerate(left_frames):
             if var_class == "insertion":
                 codon_start_pos = (
@@ -817,35 +760,21 @@ def get_sequences_indel(
                     else mut + codon_ref.find(next(filter(str.isupper, codon_ref)))
                 )
             exon_start_diff = (
-                codon_start_pos - filtered_exon_pos[prot_id][0][0]
-                if strand == "1"
-                else filtered_exon_pos[prot_id][0][1] - codon_start_pos
+                codon_start_pos - filtered_exon_pos[prot_id][0][0] if strand == "1" else filtered_exon_pos[prot_id][0][1] - codon_start_pos
             )
             if exon_start_diff >= 44:
                 start_pos = (
-                    codon_start_pos - frame
-                    if strand == "1"
-                    else codon_start_pos + frame
+                    codon_start_pos - frame if strand == "1" else codon_start_pos + frame
                 )  # this should generate a sequence of the left that is 45 bp long if +ve strand and to the right if -ve strand
             else:
-                start_pos = (
-                    filtered_exon_pos[prot_id][0][0]
-                    if strand == "1"
-                    else filtered_exon_pos[prot_id][0][1]
-                )
+                start_pos = filtered_exon_pos[prot_id][0][0] if strand == "1" else filtered_exon_pos[prot_id][0][1]
                 # check that the position from start_pos to codon_start_pos needs to be divisible by 3 and round down if not.
                 if strand == "1":
                     if (codon_start_pos - 1 - start_pos) % 3 != 0:
-                        start_pos = (
-                            codon_start_pos
-                            - ((codon_start_pos - start_pos) // 3) * 3
-                            + 1
-                        )
+                        start_pos = codon_start_pos - ((codon_start_pos - start_pos) // 3) * 3 + 1
                 else:
                     if (start_pos - codon_start_pos) % 3 != 0:
-                        start_pos = (
-                            codon_start_pos + ((start_pos - codon_start_pos) // 3) * 3
-                        )
+                        start_pos = codon_start_pos + ((start_pos - codon_start_pos) // 3) * 3
             if strand == "1":
                 left_flank = fasta.get_seq(chrom, start_pos, codon_start_pos)
                 # right side for ref
@@ -883,22 +812,10 @@ def get_sequences_indel(
                         right_flank_1 = fasta.get_seq(
                             chrom, codon_end_pos, filtered_exon_pos[prot_id][0][1]
                         )  # because this will be a fixed sequence
-                        end_pos_ref = (
-                            filtered_exon_pos[prot_id][1][0]
-                            + abs(exon_end_diff_ref)
-                            - 1
-                        )
-                        end_pos_var = (
-                            filtered_exon_pos[prot_id][1][0]
-                            + abs(exon_end_diff_var)
-                            - 1
-                        )
-                        right_flank_2_ref = fasta.get_seq(
-                            chrom, filtered_exon_pos[prot_id][1][0], end_pos_ref
-                        )
-                        right_flank_2_var = fasta.get_seq(
-                            chrom, filtered_exon_pos[prot_id][1][0], end_pos_var
-                        )
+                        end_pos_ref = filtered_exon_pos[prot_id][1][0] + abs(exon_end_diff_ref) - 1
+                        end_pos_var = filtered_exon_pos[prot_id][1][0] + abs(exon_end_diff_var) - 1
+                        right_flank_2_ref = fasta.get_seq(chrom, filtered_exon_pos[prot_id][1][0], end_pos_ref)
+                        right_flank_2_var = fasta.get_seq(chrom, filtered_exon_pos[prot_id][1][0], end_pos_var)
                         for part in [right_flank_1, right_flank_2_ref]:
                             right_flank_ref += str(part)
                         for part in [right_flank_1, right_flank_2_var]:
@@ -915,22 +832,10 @@ def get_sequences_indel(
                         left_flank_1 = fasta.get_seq(
                             chrom, codon_end_pos, filtered_exon_pos[prot_id][0][0]
                         )  # because this will be a fixed sequence
-                        end_pos_ref = (
-                            filtered_exon_pos[prot_id][1][1]
-                            - abs(exon_end_diff_ref)
-                            + 1
-                        )
-                        end_pos_var = (
-                            filtered_exon_pos[prot_id][1][1]
-                            - abs(exon_end_diff_var)
-                            + 1
-                        )
-                        left_flank_2_ref = fasta.get_seq(
-                            chrom, end_pos_ref + 1, filtered_exon_pos[prot_id][1][1]
-                        )
-                        left_flank_2_var = fasta.get_seq(
-                            chrom, end_pos_var + 1, filtered_exon_pos[prot_id][1][1]
-                        )
+                        end_pos_ref = filtered_exon_pos[prot_id][1][1] - abs(exon_end_diff_ref) + 1
+                        end_pos_var = filtered_exon_pos[prot_id][1][1] - abs(exon_end_diff_var) + 1
+                        left_flank_2_ref = fasta.get_seq(chrom, end_pos_ref + 1, filtered_exon_pos[prot_id][1][1])
+                        left_flank_2_var = fasta.get_seq(chrom, end_pos_var + 1, filtered_exon_pos[prot_id][1][1])
                         for part in [left_flank_1, left_flank_2_ref]:
                             left_flank_ref = str(part) + left_flank_ref
                         for part in [left_flank_1, left_flank_2_var]:
@@ -942,27 +847,15 @@ def get_sequences_indel(
                     right_flank_ref = fasta.get_seq(chrom, codon_end_pos, end_pos_ref)
                     right_flank_var = fasta.get_seq(chrom, codon_end_pos, end_pos_var)
                 else:
-                    left_flank_ref = fasta.get_seq(
-                        chrom, end_pos_ref, codon_end_pos - 1
-                    )
-                    left_flank_var = fasta.get_seq(
-                        chrom, end_pos_var, codon_end_pos - 1
-                    )
+                    left_flank_ref = fasta.get_seq(chrom, end_pos_ref, codon_end_pos - 1)
+                    left_flank_var = fasta.get_seq(chrom, end_pos_var, codon_end_pos - 1)
 
             if strand == "1":
                 ref_seq1 = str(left_flank) + codon_ref.upper() + str(right_flank_ref)
                 var_seq1 = str(left_flank) + codon_var.upper() + str(right_flank_var)
             else:
-                ref_seq1 = (
-                    str(left_flank_ref)
-                    + reverse_complement(codon_ref.upper())
-                    + str(right_flank)
-                )
-                var_seq1 = (
-                    str(left_flank_var)
-                    + reverse_complement(codon_var.upper())
-                    + str(right_flank)
-                )
+                ref_seq1 = str(left_flank_ref) + reverse_complement(codon_ref.upper()) + str(right_flank)
+                var_seq1 = str(left_flank_var) + reverse_complement(codon_var.upper()) + str(right_flank)
             if len(ref_seq1) != 93:
                 return None, None
             if strand == "-1":
@@ -1063,9 +956,7 @@ def get_sequences_substitution(
     ref_seq_dict, var_seq_dict = {}, {}
     left_frames = frames_or_not(aa_var)
     for prot_id in filtered_exon_pos:
-        ref_seq_dict[prot_id], var_seq_dict[prot_id] = defaultdict(list), defaultdict(
-            list
-        )
+        ref_seq_dict[prot_id], var_seq_dict[prot_id] = defaultdict(list), defaultdict(list)
         for i, frame in enumerate(left_frames):
             codon_start_pos = (
                 mut - codon_ref.find(next(filter(str.isupper, codon_ref)))
@@ -1074,36 +965,20 @@ def get_sequences_substitution(
             )  # always ref as there shouldn't be any "-" in codon_ref
             # also the codon_ref.find number works regardless of strand direction because the codon in the VEP output is already reverse complemented if it's negative strand
             exon_start_diff = (
-                codon_start_pos - filtered_exon_pos[prot_id][0][0]
-                if strand == "1"
-                else filtered_exon_pos[prot_id][0][1] - codon_start_pos
+                codon_start_pos - filtered_exon_pos[prot_id][0][0] if strand == "1" else filtered_exon_pos[prot_id][0][1] - codon_start_pos
             )
             if exon_start_diff >= 44:
-                start_pos = (
-                    codon_start_pos - frame
-                    if strand == "1"
-                    else codon_start_pos + frame
-                )
+                start_pos = codon_start_pos - frame if strand == "1" else codon_start_pos + frame
                 # this should generate a sequence of the left that is 45 bp long if +ve strand and to the right if -ve strand
             else:
-                start_pos = (
-                    filtered_exon_pos[prot_id][0][0]
-                    if strand == "1"
-                    else filtered_exon_pos[prot_id][0][1]
-                )
+                start_pos = filtered_exon_pos[prot_id][0][0] if strand == "1" else filtered_exon_pos[prot_id][0][1]
                 # check that the position from start_pos to codon_start_pos needs to be divisible by 3 and round down if not.
                 if strand == "1":
                     if (codon_start_pos - 1 - start_pos) % 3 != 0:
-                        start_pos = (
-                            codon_start_pos
-                            - ((codon_start_pos - start_pos) // 3) * 3
-                            + 1
-                        )
+                        start_pos = codon_start_pos - ((codon_start_pos - start_pos) // 3) * 3 + 1
                 else:
                     if (start_pos - codon_start_pos) % 3 != 0:
-                        start_pos = (
-                            codon_start_pos + ((start_pos - codon_start_pos) // 3) * 3
-                        )
+                        start_pos = codon_start_pos + ((start_pos - codon_start_pos) // 3) * 3
             if strand == "1":
                 left_flank = fasta.get_seq(chrom, start_pos, codon_start_pos)
                 end_pos_ref_pad = FINAL_SEQ_LEN - (len(left_flank) + len(codon_ref))
@@ -1133,22 +1008,10 @@ def get_sequences_substitution(
                         right_flank_1 = fasta.get_seq(
                             chrom, codon_end_pos, filtered_exon_pos[prot_id][0][1]
                         )  # because this will be a fixed sequence
-                        end_pos_ref = (
-                            filtered_exon_pos[prot_id][1][0]
-                            + abs(exon_end_diff_ref)
-                            - 1
-                        )
-                        end_pos_var = (
-                            filtered_exon_pos[prot_id][1][0]
-                            + abs(exon_end_diff_var)
-                            - 1
-                        )
-                        right_flank_2_ref = fasta.get_seq(
-                            chrom, filtered_exon_pos[prot_id][1][0], end_pos_ref
-                        )
-                        right_flank_2_var = fasta.get_seq(
-                            chrom, filtered_exon_pos[prot_id][1][0], end_pos_var
-                        )
+                        end_pos_ref = filtered_exon_pos[prot_id][1][0] + abs(exon_end_diff_ref) - 1
+                        end_pos_var = filtered_exon_pos[prot_id][1][0] + abs(exon_end_diff_var) - 1
+                        right_flank_2_ref = fasta.get_seq(chrom, filtered_exon_pos[prot_id][1][0], end_pos_ref)
+                        right_flank_2_var = fasta.get_seq(chrom, filtered_exon_pos[prot_id][1][0], end_pos_var)
                         for part in [right_flank_1, right_flank_2_ref]:
                             right_flank_ref += str(part)
                         for part in [right_flank_1, right_flank_2_var]:
@@ -1165,22 +1028,10 @@ def get_sequences_substitution(
                         left_flank_1 = fasta.get_seq(
                             chrom, filtered_exon_pos[prot_id][0][0], codon_end_pos
                         )  # because this will be a fixed sequence
-                        end_pos_ref = (
-                            filtered_exon_pos[prot_id][1][1]
-                            - abs(exon_end_diff_ref)
-                            + 1
-                        )
-                        end_pos_var = (
-                            filtered_exon_pos[prot_id][1][1]
-                            - abs(exon_end_diff_var)
-                            + 1
-                        )
-                        left_flank_2_ref = fasta.get_seq(
-                            chrom, end_pos_ref + 1, filtered_exon_pos[prot_id][1][1]
-                        )
-                        left_flank_2_var = fasta.get_seq(
-                            chrom, end_pos_var + 1, filtered_exon_pos[prot_id][1][1]
-                        )
+                        end_pos_ref = filtered_exon_pos[prot_id][1][1] - abs(exon_end_diff_ref) + 1
+                        end_pos_var = filtered_exon_pos[prot_id][1][1] - abs(exon_end_diff_var) + 1
+                        left_flank_2_ref = fasta.get_seq(chrom, end_pos_ref + 1, filtered_exon_pos[prot_id][1][1])
+                        left_flank_2_var = fasta.get_seq(chrom, end_pos_var + 1, filtered_exon_pos[prot_id][1][1])
                         for part in [left_flank_1, left_flank_2_ref]:
                             left_flank_ref = str(part) + left_flank_ref
                         for part in [left_flank_1, left_flank_2_var]:
@@ -1192,27 +1043,15 @@ def get_sequences_substitution(
                     right_flank_ref = fasta.get_seq(chrom, codon_end_pos, end_pos_ref)
                     right_flank_var = fasta.get_seq(chrom, codon_end_pos, end_pos_var)
                 else:
-                    left_flank_ref = fasta.get_seq(
-                        chrom, end_pos_ref, codon_end_pos - 1
-                    )
-                    left_flank_var = fasta.get_seq(
-                        chrom, end_pos_var, codon_end_pos - 1
-                    )
+                    left_flank_ref = fasta.get_seq(chrom, end_pos_ref, codon_end_pos - 1)
+                    left_flank_var = fasta.get_seq(chrom, end_pos_var, codon_end_pos - 1)
 
             if strand == "1":
                 ref_seq1 = str(left_flank) + codon_ref.upper() + str(right_flank_ref)
                 var_seq1 = str(left_flank) + codon_var.upper() + str(right_flank_var)
             else:
-                ref_seq1 = (
-                    str(left_flank_ref)
-                    + reverse_complement(codon_ref.upper())
-                    + str(right_flank)
-                )
-                var_seq1 = (
-                    str(left_flank_var)
-                    + reverse_complement(codon_var.upper())
-                    + str(right_flank)
-                )
+                ref_seq1 = str(left_flank_ref) + reverse_complement(codon_ref.upper()) + str(right_flank)
+                var_seq1 = str(left_flank_var) + reverse_complement(codon_var.upper()) + str(right_flank)
             if len(ref_seq1) != 93:
                 return None, None
             if strand == "-1":
