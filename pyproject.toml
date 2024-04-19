@@ -31,8 +31,9 @@ verbose = 1
 quiet = false
 whitelist-regex = []
 color = true
-exclude = ["scripts/archive/*", "resources"]
+exclude = ["scripts/archive", "resources"]
 
 [tool.black]
 line-length = 140
 include = '\.pyi?$'
+exclude = "scripts/archive/"
