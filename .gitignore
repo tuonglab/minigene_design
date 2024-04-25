@@ -155,6 +155,7 @@ cython_debug/
 *.fa
 *.fai
 /data
+/resources
 */final_minigenes_control.csv
 */final_minigenes_variant.csv
 scripts/Archive.zip
