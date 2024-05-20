@@ -16,10 +16,10 @@ def generate_sequences(
     
     results = {}
     for sample, file_path in input_samples:
+        results[sample] = {}
         mut_dict = create_result_list(read_and_filter(file_path))
         for mutation_class in get_sequences:
             mutations = find(mut_dict["variant_class"], mutation_class)
-            results[sample] = {}
             if len(mutations) > 0:
                 for mut in mutations:
                     results[sample][mut] = {}
