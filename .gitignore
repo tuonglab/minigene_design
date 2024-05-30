@@ -156,8 +156,12 @@ cython_debug/
 *.fai
 /data
 /resources
-*/final_minigenes_control.csv
-*/final_minigenes_variant.csv
+*/final_minigenes_control*
+*/final_minigenes_variant*
 scripts/Archive.zip
 */final_minigenes_control*
 */final_minigenes_variant*
+scripts/final_minigenes_control_v2.csv
+scripts/final_minigenes_variant_v2.csv
+scripts/final_minigenes_control_v3.csv
+scripts/final_minigenes_variant_v3.csv

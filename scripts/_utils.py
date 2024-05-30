@@ -681,21 +681,21 @@ def stop_check(aa: str) -> bool:
     return re.search("\\*", aa)
 
 
-def frames_or_not(check: bool) -> list[int]:
+def frames_or_not(aa: str) -> list[int]:
     """
-    Determines the list of frames based on a boolean check.
+    Determines the list of frames.
 
     Parameters
     ----------
-    check : bool
-        Boolean flag indicating whether to include all frames or only one.
+    aa : str
+        Str character to check for amino acid sequence
 
     Returns
     -------
     list[int]
         List of frames.
     """
-    return [44, 45, 46] if check else [44]
+    return [44, 45, 46] if re.search("\\-", aa) else [44]
 
 
 def get_sequences_indel(
