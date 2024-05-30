@@ -5,6 +5,7 @@ import pandas as pd
 
 from collections import defaultdict
 from pathlib import Path
+from tqdm import tqdm
 from typing import Any
 
 FINAL_SEQ_LEN = 93
@@ -1060,7 +1061,7 @@ def get_sequences_substitution(
             else:
                 ref_seq_dict[prot_id][i].append(ref_seq1)
                 var_seq_dict[prot_id][i].append(var_seq1)
-            if stop_check(aa_var):
+            if stop_check(aa_ref):  # loss of stop codon - hence new open reading frames
                 if strand == "1":
                     # get right hang
                     overlap_ref = get_right_hang(
@@ -1101,3 +1102,281 @@ def get_sequences_substitution(
                 var_seq_dict[prot_id][i] += overlap_var
 
     return ref_seq_dict, var_seq_dict
+
+
+def create_minigenes(
+    df: pd.DataFrame,
+    sample: str,
+    exon_info: defaultdict,
+    fasta: "Fasta",
+    out_dict: dict | None = None,
+    verbose=True,
+) -> dict:
+    """
+    Main function to extract mutations and create minigenes.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input VEP data frame.
+    sample : str
+        Sample name.
+    exon_info : defaultdict
+        Exon info extracted from GTF file.
+    fasta : Fasta
+        Fasta object used to retrieve sequences.
+    out_dict : dict
+        Dictionary to update, instead of creating a new dictionary.
+    verbose : bool
+        Whether or not to print progress bars.
+
+    Returns
+    -------
+    dict
+        Dictionary with sample name as key and i) reference minigenes, ii) variant minigenes and iii) mutation info as records.
+    """
+    mut_dict = create_result_list(df)
+    mutations = find(mut_dict["variant_class"], "insertion")
+    if out_dict is not None:
+        out_dict[sample] = {}
+    else:
+        out_dict = {}
+        out_dict[sample] = {}
+    if len(mutations) > 0:
+        for mut in tqdm(mutations, disable=not verbose):
+            out_dict[sample][mut] = {}
+            out_dict[sample][mut]["ref"], out_dict[sample][mut]["var"] = get_sequences_indel(
+                mut_info=extract_result(mut_dict, mut),
+                exon_info=exon_info,
+                fasta=fasta,
+            )
+            out_dict[sample][mut]["mut_info"] = extract_result(mut_dict, mut)
+    mutations = find(mut_dict["variant_class"], "deletion")
+    if len(mutations) > 0:
+        for mut in tqdm(mutations, disable=not verbose):
+            out_dict[sample][mut] = {}
+            out_dict[sample][mut]["ref"], out_dict[sample][mut]["var"] = get_sequences_indel(
+                mut_info=extract_result(mut_dict, mut),
+                exon_info=exon_info,
+                fasta=fasta,
+            )
+            out_dict[sample][mut]["mut_info"] = extract_result(mut_dict, mut)
+    mutations = find(mut_dict["variant_class"], "SNV")
+    if len(mutations) > 0:
+        for mut in tqdm(mutations, disable=not verbose):
+            out_dict[sample][mut] = {}
+            out_dict[sample][mut]["ref"], out_dict[sample][mut]["var"] = get_sequences_substitution(
+                mut_info=extract_result(mut_dict, mut),
+                exon_info=exon_info,
+                fasta=fasta,
+            )
+            out_dict[sample][mut]["mut_info"] = extract_result(mut_dict, mut)
+    mutations = find(mut_dict["variant_class"], "substitution")
+    if len(mutations) > 0:
+        for mut in tqdm(mutations, disable=not verbose):
+            out_dict[sample][mut] = {}
+            out_dict[sample][mut]["ref"], out_dict[sample][mut]["var"] = get_sequences_substitution(
+                mut_info=extract_result(mut_dict, mut),
+                exon_info=exon_info,
+                fasta=fasta,
+            )
+            out_dict[sample][mut]["mut_info"] = extract_result(mut_dict, mut)
+    return out_dict
+
+
+def collapse_output(
+    out_dict: dict,
+    minigene_col: str = "minigene",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Collapse the final minigenes into two data frames.
+
+    Parameters
+    ----------
+    out_dict : dict
+        Output dictionary from `create_minigenes` function.
+    minigene_col: str
+        Column name to report minigene, defaults to "minigene".
+    Returns
+    -------
+    tuple[pd.DataFrame, pd.DataFrame]
+        One data frame for reference and one for variant.
+    """
+    ref_list, var_list = [], []
+    for sample in out_dict:
+        for mut in out_dict[sample]:
+            if out_dict[sample][mut]["ref"] is not None:
+                for protein in out_dict[sample][mut]["ref"]:
+                    for frame in out_dict[sample][mut]["ref"][protein]:
+                        for i, seq in enumerate(out_dict[sample][mut]["ref"][protein][frame]):
+                            mut_info = {}
+                            for key, record in out_dict[sample][mut]["mut_info"].items():
+                                mut_info[key] = record
+                            mut_info.update(
+                                {
+                                    f"{minigene_col}": seq,
+                                    f"{minigene_col}_id": str(sample)
+                                    + "_"
+                                    + str(mut)
+                                    + "_"
+                                    + protein
+                                    + "_"
+                                    + str(frame)
+                                    + "_"
+                                    + str(i)
+                                    + "_ref",
+                                }
+                            )
+                            ref_list.append(mut_info)
+    for sample in out_dict:
+        for mut in out_dict[sample]:
+            if out_dict[sample][mut]["var"] is not None:
+                for protein in out_dict[sample][mut]["var"]:
+                    for frame in out_dict[sample][mut]["var"][protein]:
+                        for i, seq in enumerate(out_dict[sample][mut]["var"][protein][frame]):
+                            mut_info = {}
+                            for key, record in out_dict[sample][mut]["mut_info"].items():
+                                mut_info[key] = record
+                            mut_info.update(
+                                {
+                                    f"{minigene_col}": seq,
+                                    f"{minigene_col}_id": str(sample)
+                                    + "_"
+                                    + str(mut)
+                                    + "_"
+                                    + protein
+                                    + "_"
+                                    + str(frame)
+                                    + "_"
+                                    + str(i)
+                                    + "_var",
+                                }
+                            )
+                            var_list.append(mut_info)
+    ref_df = pd.DataFrame(ref_list)
+    var_df = pd.DataFrame(var_list)
+    return ref_df, var_df
+
+
+def replace_bbsl_restriction_site(
+    df: pd.DataFrame,
+    minigene_col: str = "minigene",
+) -> pd.DataFrame:
+    """
+    Replace bbsl restriction sites with corrected codons.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data frame containing the minigenes.
+    minigene_col : str, optional
+        Column name of minigene, by default "minigene"
+
+    Returns
+    -------
+    pd.DataFrame
+        Modified data frame containing corrected sequences.
+    """
+    # situation 1: GAA GAC, CTT CTG, GTC TTC, GTC TTC, CAG AAG
+    dict1 = {"GAA": "GAG", "CTT": "CTA", "GTC": "GTA", "CAG": "CAA"}
+    # situation 2: _GA AGAC, _CT TCT G, _GT CTT C, _CA GAA G
+    dict2 = {
+        "AGA": "AGG",
+        "GGA": "GGG",
+        "CGA": "CGG",
+        "TGA": "TAG",
+        "ACT": "ACC",
+        "GCT": "GCC",
+        "CCT": "CCC",
+        "TCT": "TCC",
+        "AGT": "AGC",
+        "GGT": "GGC",
+        "CGT": "CGC",
+        "TGT": "TGC",
+        "ACA": "ACC",
+        "GCA": "GCC",
+        "CCA": "CCC",
+        "TCA": "TCC",
+    }
+
+    # situation 3: __G AAG AC, __C TTC TG, __G TCT TC, __C AGA AG
+    dict3 = {
+        "AAG": "AAA",
+        "ACG": "ACT",
+        "AGG": "AGA",
+        "TAG": "TGA",
+        "TTG": "TTA",
+        "TCG": "TCT",
+        "CAG": "CAA",
+        "CTG": "CTA",
+        "CGG": "CGA",
+        "GAG": "GAA",
+        "GTG": "GTA",
+        "GCG": "GCT",
+        "GGG": "GGA",
+        "AAC": "AAT",
+        "ACC": "ACT",
+        "AGC": "AGT",
+        "ATC": "ATT",
+        "TAC": "TAT",
+        "TTC": "TTT",
+        "TCC": "TCT",
+        "TGC": "TGT",
+        "CAC": "CAT",
+        "CTC": "CTT",
+        "CGC": "CGT",
+        "CCC": "CCT",
+        "GAC": "GAT",
+        "GTC": "GTT",
+        "GCC": "GCT",
+        "GGC": "GGT",
+    }
+
+    # situation 4: ATG, TGG
+    dict4 = {"AAG": "AAA", "TCT": "TCC"}
+
+    bbs1_varient = []
+    for seq in df[minigene_col]:
+        new_seq = seq
+        # altered = 0 # keeping this the masked lines to check in case it breaks later
+        # counter = 0
+        for x in [
+            "GAAGAC",
+            "CTTCTG",
+            "GTCTTC",
+            "CAGAAG",
+        ]:
+            occurences = [m.start() for m in re.finditer(x, new_seq)]
+            if len(occurences) > 0:
+                # counter += 0
+                # first need to find the location number of the sequence and see if that number is divisible by 3
+                for position in occurences:
+                    if position % 3 == 0:
+                        # situation 1
+                        pos = position
+                        new_seq = new_seq[:pos] + dict1[new_seq[pos : pos + 3]] + new_seq[pos + 3 :]
+                    else:
+                        if (position - 1) % 3 == 0:
+                            # situation 2
+                            pos = position - 1
+                            new_seq = new_seq[:pos] + dict2[new_seq[pos : pos + 3]] + new_seq[pos + 3 :]
+                            # print("2",new_seq )
+                        else:
+                            # situation 3
+                            pos = position - 2
+                            if new_seq[pos : pos + 3] in dict3:
+                                new_seq = new_seq[:pos] + dict3[new_seq[pos : pos + 3]] + new_seq[pos + 3 :]
+                            else:
+                                # situation 4
+                                pos = position + 1
+                                new_seq = new_seq[:pos] + dict4[new_seq[pos : pos + 3]] + new_seq[pos + 3 :]
+                # altered += 1
+                # counter += 1
+        # if counter > 1:
+        # 	bbs1_varient.append(new_seq)
+        # else:
+        # 	bbs1_varient.append("")
+        bbs1_varient.append(new_seq)
+
+    df[f"modified_{minigene_col}"] = bbs1_varient
+    return df
