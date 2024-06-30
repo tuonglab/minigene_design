@@ -5,7 +5,7 @@ import pandas as pd
 from scripts.generate_sequences import generate_sequences
 from scripts._utils import extract_exon_info
 
-def process_test_data(hg38_folder: Path, input_folder: Path):
+def process_test_data(hg38_folder: Path, input_folder: Path) -> dict[str, pd.DataFrame]:
     """
     Returns an object containing
         "ref": dataframe containing the reference minigenes
@@ -47,4 +47,3 @@ def without_refvar(df: pd.DataFrame):
     result = df.copy(True)
     result['minigene_id'] = result['minigene_id'].str[:-len('_ref')]
     return result
-    
