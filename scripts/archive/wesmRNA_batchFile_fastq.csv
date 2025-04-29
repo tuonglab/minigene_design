@@ -1,7 +1,0 @@
-sampleName,reads1,reads2,sampleType,HLAfile,sex
-healthy_tumour,/scratch/project/tcr_neoantigen/processing/healthy_exome/2020135-H-Exome_S3_R1_001.fastq.gz,/scratch/project/tcr_neoantigen/processing/healthy_exome/2020135-H-Exome_S3_R2_001.fastq.gz,normal_DNA,,,
-healthy_tumour,/scratch/project/tcr_neoantigen/processing/tumour_exome/2020135-T-Exome_S5_R1_001.fastq.gz,/scratch/project/tcr_neoantigen/processing/tumour_exome/2020135-T-Exome_S5_R2_001.fastq.gz,tumor_DNA,,,
-healthy_tumour,/scratch/project/tcr_neoantigen/processing/tumour_rnaseq/2020135-T-RNASeq_S6_R1_001.fastq.gz,/scratch/project/tcr_neoantigen/processing/tumour_rnaseq/2020135-T-RNASeq_S6_R2_001.fastq.gz,tumor_RNA,,,
-blood_tumour,/scratch/project/tcr_neoantigen/processing/blood_exome/2020135-B-Exome_S1_R1_001.fastq.gz,/scratch/project/tcr_neoantigen/processing/blood_exome/2020135-B-Exome_S1_R2_001.fastq.gz,normal_DNA,,,
-blood_tumour,/scratch/project/tcr_neoantigen/processing/tumour_exome/2020135-T-Exome_S5_R1_001.fastq.gz,/scratch/project/tcr_neoantigen/processing/tumour_exome/2020135-T-Exome_S5_R2_001.fastq.gz,tumor_DNA,,,
-blood_tumour,/scratch/project/tcr_neoantigen/processing/tumour_rnaseq/2020135-T-RNASeq_S6_R1_001.fastq.gz,/scratch/project/tcr_neoantigen/processing/tumour_rnaseq/2020135-T-RNASeq_S6_R2_001.fastq.gz,tumor_RNA,,,

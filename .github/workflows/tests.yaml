@@ -1,0 +1,54 @@
+name: tests
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - "master"
+
+env:
+  cache-version: "cache-v1"
+
+jobs:
+  tests:
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      matrix:
+        config:
+          - { python-version: "3.11", os: ubuntu-latest }
+          - { python-version: "3.12", os: ubuntu-latest }
+          - { python-version: "3.13", os: ubuntu-latest }
+    runs-on: ${{ matrix.config.os }}
+    env:
+      TZ: UTC
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.config.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+            path: ~/.cache/pip
+            key: ${{ runner.os }}-pip-${{ env.cache-version }}-${{ hashFiles('pyproject.toml') }}
+            restore-keys: |
+                ${{ runner.os }}-pip-${{ env.cache-version }}-
+      - name: Install
+        run: |
+          pip install -e ".[test]"
+
+      - name: Test with pytest
+        run: |
+          pytest
+
+      - name: Show coverage
+        run: |
+          coverage report

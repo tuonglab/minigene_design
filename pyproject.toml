@@ -1,16 +1,18 @@
 [tool.poetry]
-name = "minigene-design"
-version = "0.1.0"
+name = "minigene_design"
+version = "0.2.0"
 description = ""
 authors = ["Zewen Kelvin Tuong <z.tuong@uq.edu.au>"]
 readme = "README.md"
-packages = [{ include = "minigene_design" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 pyfaidx = "^0.8.1.1"
 pandas = "^2.2.2"
+tqdm = "*"
 
+[tool.poetry.extras]
+test = ["black", "pytest-cov"]
 
 [build-system]
 requires = ["poetry-core"]
