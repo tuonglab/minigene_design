@@ -22,6 +22,8 @@ def read_and_filter(file_input_path: str | Path, keep_from_lines: int = 103) -> 
 
     keep_from_lines : int, optional
         The number of lines to keep from the input file, starting from the specified line number.
+        This is used to skip header lines or unwanted lines in the file that starts with hashes.
+        We want to keep the header, which can look like: "#Uploaded_variation	Location	Allele	Gene	Feature	Feature_type".
         Defaults to 103.
 
     Returns
@@ -702,6 +704,7 @@ def get_sequences_indel(
     mut_info: dict,
     exon_info: dict,
     fasta: "Fasta",
+    return_length: int = FINAL_SEQ_LEN,
 ) -> tuple[dict[str, dict[int, list[str]]], dict[str, dict[int, list[str]]], None]:
     """
     Retrieves reference and variant sequences for indels.
@@ -710,12 +713,12 @@ def get_sequences_indel(
     ----------
     mut_info : dict
         Mutation information dictionary.
-
     exon_info : dict
         Exon information dictionary.
-
     fasta : Fasta
         Fasta file object containing sequences.
+    return_length : int, optional
+        Length of the sequences to be returned, by default 93.
 
     Returns
     -------
@@ -779,8 +782,8 @@ def get_sequences_indel(
             if strand == "1":
                 left_flank = fasta.get_seq(chrom, start_pos, codon_start_pos)
                 # right side for ref
-                end_pos_ref_pad = FINAL_SEQ_LEN - (len(left_flank) + len(codon_ref))
-                end_pos_var_pad = FINAL_SEQ_LEN - (len(left_flank) + len(codon_var))
+                end_pos_ref_pad = return_length - (len(left_flank) + len(codon_ref))
+                end_pos_var_pad = return_length - (len(left_flank) + len(codon_var))
                 if var_class == "insertion":
                     codon_end_pos = codon_start_pos + len(codon_ref) + 1
                 elif var_class == "deletion":
@@ -792,8 +795,8 @@ def get_sequences_indel(
             else:
                 right_flank = fasta.get_seq(chrom, codon_start_pos + 1, start_pos)
                 # right side for ref
-                end_pos_ref_pad = FINAL_SEQ_LEN - (len(right_flank) + len(codon_ref))
-                end_pos_var_pad = FINAL_SEQ_LEN - (len(right_flank) + len(codon_var))
+                end_pos_ref_pad = return_length - (len(right_flank) + len(codon_ref))
+                end_pos_var_pad = return_length - (len(right_flank) + len(codon_var))
                 if var_class == "insertion":
                     codon_end_pos = codon_start_pos - len(codon_ref)
                 elif var_class == "deletion":
@@ -911,6 +914,7 @@ def get_sequences_substitution(
     mut_info: dict,
     exon_info: dict,
     fasta: "Fasta",
+    return_length: int = FINAL_SEQ_LEN,
 ) -> tuple[dict[str, dict[int, list[str]]], dict[str, dict[int, list[str]]], None]:
     """
     Retrieves reference and variant sequences for substitutions.
@@ -925,6 +929,9 @@ def get_sequences_substitution(
 
     fasta : Fasta
         Fasta file object containing sequences.
+
+    return_length : int, optional
+        Length of the sequences to be returned, by default 93.
 
     Returns
     -------
@@ -982,8 +989,8 @@ def get_sequences_substitution(
                         start_pos = codon_start_pos + ((start_pos - codon_start_pos) // 3) * 3
             if strand == "1":
                 left_flank = fasta.get_seq(chrom, start_pos, codon_start_pos)
-                end_pos_ref_pad = FINAL_SEQ_LEN - (len(left_flank) + len(codon_ref))
-                end_pos_var_pad = FINAL_SEQ_LEN - (len(left_flank) + len(codon_var))
+                end_pos_ref_pad = return_length - (len(left_flank) + len(codon_ref))
+                end_pos_var_pad = return_length - (len(left_flank) + len(codon_var))
                 codon_end_pos = codon_start_pos + len(codon_ref) + 1
                 end_pos_ref = codon_end_pos + end_pos_ref_pad - 1
                 end_pos_var = codon_end_pos + end_pos_var_pad - 1
@@ -991,8 +998,8 @@ def get_sequences_substitution(
                 exon_end_diff_var = filtered_exon_pos[prot_id][0][1] - end_pos_var
             else:
                 right_flank = fasta.get_seq(chrom, codon_start_pos + 1, start_pos)
-                end_pos_ref_pad = FINAL_SEQ_LEN - (len(right_flank) + len(codon_ref))
-                end_pos_var_pad = FINAL_SEQ_LEN - (len(right_flank) + len(codon_var))
+                end_pos_ref_pad = return_length - (len(right_flank) + len(codon_ref))
+                end_pos_var_pad = return_length - (len(right_flank) + len(codon_var))
                 codon_end_pos = codon_start_pos - len(codon_ref)
                 end_pos_ref = codon_end_pos - end_pos_ref_pad
                 end_pos_var = codon_end_pos - end_pos_var_pad
@@ -1110,6 +1117,7 @@ def create_minigenes(
     exon_info: defaultdict,
     fasta: "Fasta",
     out_dict: dict | None = None,
+    return_length: int = FINAL_SEQ_LEN,
     verbose=True,
 ) -> dict:
     """
@@ -1127,6 +1135,8 @@ def create_minigenes(
         Fasta object used to retrieve sequences.
     out_dict : dict
         Dictionary to update, instead of creating a new dictionary.
+    return_length : int
+        Length of the sequences to be returned, by default 93.
     verbose : bool
         Whether or not to print progress bars.
 
@@ -1149,6 +1159,7 @@ def create_minigenes(
                 mut_info=extract_result(mut_dict, mut),
                 exon_info=exon_info,
                 fasta=fasta,
+                return_length=return_length,
             )
             out_dict[sample][mut]["mut_info"] = extract_result(mut_dict, mut)
     mutations = find(mut_dict["variant_class"], "deletion")
@@ -1159,6 +1170,7 @@ def create_minigenes(
                 mut_info=extract_result(mut_dict, mut),
                 exon_info=exon_info,
                 fasta=fasta,
+                return_length=return_length,
             )
             out_dict[sample][mut]["mut_info"] = extract_result(mut_dict, mut)
     mutations = find(mut_dict["variant_class"], "SNV")
@@ -1169,6 +1181,7 @@ def create_minigenes(
                 mut_info=extract_result(mut_dict, mut),
                 exon_info=exon_info,
                 fasta=fasta,
+                return_length=return_length,
             )
             out_dict[sample][mut]["mut_info"] = extract_result(mut_dict, mut)
     mutations = find(mut_dict["variant_class"], "substitution")
@@ -1179,6 +1192,7 @@ def create_minigenes(
                 mut_info=extract_result(mut_dict, mut),
                 exon_info=exon_info,
                 fasta=fasta,
+                return_length=return_length,
             )
             out_dict[sample][mut]["mut_info"] = extract_result(mut_dict, mut)
     return out_dict
