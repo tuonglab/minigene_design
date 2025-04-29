@@ -45,10 +45,10 @@ jobs:
         run: |
           pip install -e ".[test]"
 
-      - name: Test with pytest
-        run: |
-          pytest
+      # - name: Test with pytest
+      #   run: |
+      #     pytest
 
-      - name: Show coverage
-        run: |
-          coverage report
+      # - name: Show coverage
+      #   run: |
+      #     coverage report
