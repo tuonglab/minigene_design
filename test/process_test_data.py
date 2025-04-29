@@ -38,6 +38,9 @@ def process_test_data(hg38_folder: Path, input_folder: Path):
 
 # Removes the _ref and _var from the end of the minigene_id
 def without_refvar(df: pd.DataFrame):
+    """
+    Removes the _ref and _var from the end of the minigene_id
+    """
     result = df.copy(True)
     result["minigene_id"] = result["minigene_id"].str[: -len("_ref")]
     return result

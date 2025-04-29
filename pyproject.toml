@@ -10,6 +10,9 @@ python = "^3.10"
 pyfaidx = "^0.8.1.1"
 pandas = "^2.2.2"
 tqdm = "*"
+black = { optional = true, version = "*" }
+pytest-cov = { optional = true, version = "*" }
+
 
 [tool.poetry.extras]
 test = ["black", "pytest-cov"]

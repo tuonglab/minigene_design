@@ -74,6 +74,7 @@ def parse_args():
 
 
 def main():
+    """Main function to generate minigenes."""
     args = parse_args()
     refgen = Fasta(args.ref)
     exon_info = extract_exon_info(args.gtf)
