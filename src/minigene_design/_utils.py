@@ -784,7 +784,7 @@ def get_sequences_indel(
             )
             if exon_start_diff >= (flank_len - 1):
                 start_pos = (
-                    codon_start_pos - frame if strand == 1 else codon_start_pos + frame
+                    codon_start_pos - 1 - frame if strand == 1 else codon_start_pos + 1 + frame
                 )  # this should generate a sequence of the left that is flank_len bp long if +ve strand and to the right if -ve strand
             else:
                 start_pos = filtered_exon_pos[prot_id][0][0] if strand == 1 else filtered_exon_pos[prot_id][0][1]
@@ -796,7 +796,7 @@ def get_sequences_indel(
                     if (start_pos - codon_start_pos) % 3 != 0:
                         start_pos = codon_start_pos + ((start_pos - codon_start_pos) // 3) * 3
             if strand == 1:
-                left_flank = fasta.get_seq(chrom, start_pos, codon_start_pos)
+                left_flank = fasta.get_seq(chrom, start_pos, codon_start_pos - 1)
                 # right side for ref
                 end_pos_ref_pad = return_length - (len(left_flank) + len(codon_ref))
                 end_pos_var_pad = return_length - (len(left_flank) + len(codon_var))
@@ -817,8 +817,8 @@ def get_sequences_indel(
                     codon_end_pos = codon_start_pos - len(codon_ref)
                 elif var_class == "deletion":
                     codon_end_pos = codon_start_pos - len(codon_var)
-                end_pos_ref = codon_end_pos - end_pos_ref_pad
-                end_pos_var = codon_end_pos - end_pos_var_pad
+                end_pos_ref = codon_end_pos - end_pos_ref_pad + 1
+                end_pos_var = codon_end_pos - end_pos_var_pad + 1
                 exon_end_diff_ref = end_pos_ref - filtered_exon_pos[prot_id][0][0]
                 exon_end_diff_var = end_pos_var - filtered_exon_pos[prot_id][0][0]
             if exon_end_diff_ref < 0:  # that means we exceed the end of the first exon
@@ -867,8 +867,8 @@ def get_sequences_indel(
                     right_flank_ref = fasta.get_seq(chrom, codon_end_pos, end_pos_ref)
                     right_flank_var = fasta.get_seq(chrom, codon_end_pos, end_pos_var)
                 else:
-                    left_flank_ref = fasta.get_seq(chrom, end_pos_ref, codon_end_pos - 1)
-                    left_flank_var = fasta.get_seq(chrom, end_pos_var, codon_end_pos - 1)
+                    left_flank_ref = fasta.get_seq(chrom, end_pos_ref, codon_end_pos)
+                    left_flank_var = fasta.get_seq(chrom, end_pos_var, codon_end_pos)
 
             if strand == 1:
                 ref_seq1 = str(left_flank) + codon_ref.upper() + str(right_flank_ref)
