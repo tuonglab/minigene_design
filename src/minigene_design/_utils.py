@@ -1027,7 +1027,6 @@ def get_sequences_substitution(
                 exon_end_diff_ref = end_pos_ref - filtered_exon_pos[prot_id][0][0]
                 exon_end_diff_var = end_pos_var - filtered_exon_pos[prot_id][0][0]
             if exon_end_diff_ref < 0:  # that means we exceed the end of the first exon
-                print(prot_id)
                 if strand == 1:
                     if (
                         codon_end_pos > filtered_exon_pos[prot_id][0][1]
