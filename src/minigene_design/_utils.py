@@ -1009,10 +1009,10 @@ def get_sequences_substitution(
                     if (start_pos - codon_start_pos) % 3 != 0:
                         start_pos = codon_start_pos + ((start_pos - codon_start_pos) // 3) * 3
             if strand == 1:
-                left_flank = fasta.get_seq(chrom, start_pos, codon_start_pos)
+                left_flank = fasta.get_seq(chrom, start_pos, codon_start_pos - 1)
                 end_pos_ref_pad = return_length - (len(left_flank) + len(codon_ref))
                 end_pos_var_pad = return_length - (len(left_flank) + len(codon_var))
-                codon_end_pos = codon_start_pos + len(codon_ref) + 1
+                codon_end_pos = codon_start_pos + len(codon_ref)
                 end_pos_ref = codon_end_pos + end_pos_ref_pad - 1
                 end_pos_var = codon_end_pos + end_pos_var_pad - 1
                 exon_end_diff_ref = filtered_exon_pos[prot_id][0][1] - end_pos_ref
