@@ -2,6 +2,7 @@ import re
 import shutil
 
 import pandas as pd
+import numpy as np
 
 from collections import defaultdict
 from pathlib import Path
@@ -1041,6 +1042,7 @@ def get_sequences_substitution(
                         end_pos_var = filtered_exon_pos[prot_id][1][0] + abs(exon_end_diff_var) - 1
                         right_flank_2_ref = fasta.get_seq(chrom, filtered_exon_pos[prot_id][1][0], end_pos_ref)
                         right_flank_2_var = fasta.get_seq(chrom, filtered_exon_pos[prot_id][1][0], end_pos_var)
+                        ref_posses = [filtered_exon_pos[prot_id][0][1], filtered_exon_pos[prot_id][1][0], end_pos_ref]
                         for part in [right_flank_1, right_flank_2_ref]:
                             right_flank_ref += str(part)
                         for part in [right_flank_1, right_flank_2_var]:
@@ -1061,6 +1063,7 @@ def get_sequences_substitution(
                         end_pos_var = filtered_exon_pos[prot_id][1][1] - abs(exon_end_diff_var) + 1
                         left_flank_2_ref = fasta.get_seq(chrom, end_pos_ref, filtered_exon_pos[prot_id][1][1])
                         left_flank_2_var = fasta.get_seq(chrom, end_pos_var, filtered_exon_pos[prot_id][1][1])
+                        ref_posses = [end_pos_ref, filtered_exon_pos[prot_id][1][1], filtered_exon_pos[prot_id][0][0]]
                         for part in [left_flank_1, left_flank_2_ref]:
                             left_flank_ref = str(part) + left_flank_ref
                         for part in [left_flank_1, left_flank_2_var]:
@@ -1078,9 +1081,59 @@ def get_sequences_substitution(
             if strand == 1:
                 ref_seq1 = str(left_flank) + codon_ref.upper() + str(right_flank_ref)
                 var_seq1 = str(left_flank) + codon_var.upper() + str(right_flank_var)
+                # do an assertion check for ref_seq1
+                # use fasta.get_seq to get the sequence from the fasta file
+                # reset the start_pos just in case it got shifted while creating the correct sequence
+                if exon_start_diff == 0:
+                    start_pos = filtered_exon_pos[prot_id][0][0]
+                if exon_end_diff_ref < 0:
+                    if exon_start_diff > 3:
+                        original_seq = str(fasta.get_seq(chrom, start_pos - (max(3 - exon_start_diff, 0)), ref_posses[0])) + str(
+                            fasta.get_seq(chrom, ref_posses[1], ref_posses[2])
+                        )
+                    else:
+                        if codon_start_pos < start_pos:
+                            original_seq = str(fasta.get_seq(chrom, codon_start_pos, ref_posses[0])) + str(
+                                fasta.get_seq(chrom, ref_posses[1], ref_posses[2])
+                            )
+                        else:
+                            original_seq = str(fasta.get_seq(chrom, start_pos, ref_posses[0])) + str(
+                                fasta.get_seq(chrom, ref_posses[1], ref_posses[2])
+                            )
+                else:
+                    if exon_start_diff > 3:
+                        original_seq = str(fasta.get_seq(chrom, start_pos - (max(3 - exon_start_diff, 0)), end_pos_ref))
+                    else:
+                        if codon_start_pos < start_pos:
+                            original_seq = str(fasta.get_seq(chrom, codon_start_pos, end_pos_ref))
+                        else:
+                            original_seq = str(fasta.get_seq(chrom, start_pos, end_pos_ref))
+                if ref_seq1 != original_seq:
+                    return None, None
+                # assert ref_seq1 == original_seq, f"Ref seq1: {ref_seq1}, Original seq: {original_seq}"
+                # do an assertion check for var_seq1 with hamming distance
+                if len(np.array(list(var_seq1))) != len(np.array(list(original_seq))):
+                    return None, None  # because somehow the left flank sequence is not the same length as the original sequence
+                # assert np.sum(np.array(list(var_seq1)) != np.array(list(original_seq))) == len(mut_info["variant"])
             else:
                 ref_seq1 = str(left_flank_ref) + reverse_complement(codon_ref.upper()) + str(right_flank)
                 var_seq1 = str(left_flank_var) + reverse_complement(codon_var.upper()) + str(right_flank)
+                # do an assertion check for ref_seq1
+                if exon_start_diff == 0:
+                    start_pos = filtered_exon_pos[prot_id][0][1]
+                if exon_end_diff_ref < 0:
+                    original_seq = str(fasta.get_seq(chrom, ref_posses[0], ref_posses[1])) + str(
+                        fasta.get_seq(chrom, ref_posses[2], start_pos + (3 if exon_start_diff < 0 else 0))
+                    )
+                else:
+                    original_seq = str(fasta.get_seq(chrom, end_pos_ref, start_pos + (3 if exon_start_diff < 0 else 0)))
+                if ref_seq1 != original_seq:
+                    return None, None
+                # assert ref_seq1 == original_seq, f"Ref seq1: {ref_seq1}, Original seq: {original_seq}"
+                # do an assertion check for var_seq1 with hamming distance
+                if len(np.array(list(var_seq1))) != len(np.array(list(original_seq))):
+                    return None, None  # because somehow the left flank sequence is not the same length as the original sequence
+                # assert np.sum(np.array(list(var_seq1)) != np.array(list(original_seq))) == len(mut_info["variant"])
             if len(ref_seq1) != return_length:
                 return None, None
             if strand == -1:
